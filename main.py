@@ -190,7 +190,7 @@ def create_room():
 def change_room_name():
 	username = request.form['username']
 	cookie = request.form['cookie']
-	chatroom_name = request.form['chatroom_name']
+	room_id = request.form['room_id']
 	new_chatroom_name = request.form['new_chatroom_name']
 
 	if not authenticate_user(username, cookie):
@@ -200,14 +200,15 @@ def change_room_name():
 	if chatroom_name_taken:
 		return 'failed'
 	else:
-		room = db.session.query(Room).filter_by(name=chatroom_name).first()
+		room = db.session.query(Room).filter_by(id=int(room_id)).first()
+		old_chatroom_name = room.name
 		room.name = new_chatroom_name
 		db.session.commit()
 		socketio.emit('chatroom_name_changed', {
-			"room_id": str(room.id),
-			"old_name": chatroom_name,
+			"room_id": room_id,
+			"old_name": old_chatroom_name,
 			"new_name": new_chatroom_name
-		}, room=str(room.id))
+		}, room=room_id)
 
 		return 'successful'
 
@@ -247,7 +248,7 @@ def add_member():
 					user = db.session.query(Account).filter_by(id=ru.account_id).first()
 					people.append(user.name)
 
-				socketio.emit('new_members', {'chatroom_name': chatroom_name, "members": people}, room=str(room.id))
+				socketio.emit('new_members', {'room_id': str(room.id), "members": people}, room=str(room.id))
 
 			return 'successful'
 		else:

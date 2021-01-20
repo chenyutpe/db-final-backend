@@ -150,7 +150,11 @@ def chat(id):
 
 	for ru in room_users:
 		user = db.session.query(Account).filter_by(id=ru.account_id).first()
-		people.append(user.name)
+		nickname = ru.nickname if ru.nickname else user.name
+		people.append({
+			'username': user.name,
+			'nickname': nickname
+		})
 	response['people'] = people
 
 	room_messages = db.session.query(Message).filter_by(room_id=room.id).all()
@@ -246,7 +250,11 @@ def add_member():
 				room_users = room.db_room_account_rel
 				for ru in room_users:
 					user = db.session.query(Account).filter_by(id=ru.account_id).first()
-					people.append(user.name)
+					nickname = ru.nickname if ru.nickname else user.name
+					people.append({
+						'username': user.name,
+						'nickname': nickname
+					})
 
 				socketio.emit('new_members', {'room_id': str(room.id), "members": people}, room=str(room.id))
 
@@ -271,7 +279,6 @@ def message(data):
 		"sender": username,
 		"body": content
 	}, room=str(room.id))
-
 	
 	new_msg = Message(content, False, user.id, room.id)
 	
@@ -325,7 +332,25 @@ def emoji_theme_change(data):
 		'emoji_index': emoji_index,
 		'theme_index': theme_index
 	}, room=chatroom_id)
+
+@socketio.on('nickname_change')
+def nickname_change(data):
+	chatroom_id = data['room_id']
+	member_name = data['username']
+	nickname = data['nickname']
 	
+	room = db.session.query(Room).filter_by(id=int(chatroom_id)).first()
+	member = db.session.query(Account).filter_by(name=member_name).first()
+	b = db.session.query(Belong).filter_by(_account_rel=member, _room_rel=room).first()
+	b.nickname = nickname
+	db.session.commit()
+	
+	emit('nickname_change_out', {
+		"room_id": chatroom_id,
+		'username': member_name,
+		'new_nickname': nickname
+	}, room=chatroom_id)
+
 @socketio.on('init')
 def init(data):
 	username = data['username']

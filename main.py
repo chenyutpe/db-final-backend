@@ -255,7 +255,7 @@ def add_member():
 						'username': user.name,
 						'nickname': nickname
 					})
-
+				
 				socketio.emit('new_members', {'room_id': str(room.id), "members": people}, room=str(room.id))
 
 			return 'successful'

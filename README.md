@@ -1,4 +1,4 @@
-# db_final_backend
+# Database Management Fall 2020 Final project "Chatroom System" (backend)
 Final project "Chatroom System" for course "Database Management Fall 2020".
 Mainly using ReactJS, Python with Flask, and PostgreSQL.
 
